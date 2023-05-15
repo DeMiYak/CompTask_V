@@ -47,7 +47,9 @@ public:
 
     void ModifySegmentNum(int modifier = -1) {if(modifier > 0) _segmentNum *= modifier;}
 
-    void ModifyFormula(const string &insertString){_formula = _formula*insertString;}
+    void ModifyFormulaMultiply(const string &insertString){_formula = _formula*insertString;}
+
+    void ModifyFormula(const string &insertString){_formula = insertString;}
 
     Formula GetFormula() const{return _formula;}
 

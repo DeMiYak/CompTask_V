@@ -29,16 +29,18 @@ int main() {
     wcout.precision(16);
     cout.precision(16);
 
-    string sampleText = "[x-0,5]";
-    double x;
+//    string sampleText = "[x-0,5]";
+//    double x;
+//
+//    std::cin >> x;
+//
+//    Formula sampleFormula = Formula(sampleText);
+//
+//
+//    cout << sampleFormula.Evaluate(x);
+//
+//    testAll();
 
-    std::cin >> x;
-
-    Formula sampleFormula = Formula(sampleText);
-
-
-    cout << sampleFormula.Evaluate(x);
-
-    testAll();
+    Task5_1();
     return 0;
 }

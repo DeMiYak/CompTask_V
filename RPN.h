@@ -14,7 +14,7 @@ using namespace std;
 class Formula {
 public:
 
-    Formula() { _formula = "0"; }
+    Formula() { _formula = ""; }
 
     Formula(string formula) { _formula = formula; }
 

@@ -10,7 +10,7 @@ ublas::vector<double> weightFunctionMoment(Integrator weightIntegrator, int node
     ublas::vector<double> vectorMoment(nodeACT);
     for (int i = 0; i < nodeACT; ++i) {
         vectorMoment(i) = weightIntegrator.JSimpson().value;
-        weightIntegrator.ModifyFormula("x");
+        weightIntegrator.ModifyFormulaMultiply("x");
     }
     return vectorMoment;
 
@@ -39,7 +39,7 @@ ublas::vector<double> weightFunctionMoment(Integrator weightIntegrator, int node
 //    return ublasNodeVector;
 //}
 
-ublas::vector<double> FindPolynomialCoefficient(const ublas::vector<double> weightFuncMoment) {
+ublas::vector<double> FindPolynomialCoefficient(const ublas::vector<double> &weightFuncMoment) {
     const unsigned size = weightFuncMoment.size() / 2;
     ublas::matrix<double> matrixInverseMoment(size, size);
     ublas::vector<double> weightMomentHalf(size);
@@ -58,24 +58,26 @@ ublas::vector<double> FindPolynomialCoefficient(const ublas::vector<double> weig
     return polynomialCoefficient;
 }
 
-Formula BuildQFHADA(const ublas::vector<double> &polynomialCoefficient) {
+Formula BuildQFHADP(const ublas::vector<double> &polynomialCoefficient) {
     int degree = polynomialCoefficient.size();
-    Formula QFHADA = "x^" + to_string(degree);
+    string QFHADP = "x^" + to_string(degree);
 
     degree--;
 
     while (degree >= 0) {
-        Formula temp = to_string(polynomialCoefficient(degree)) + "*x^" + to_string(degree);
-        QFHADA = QFHADA + temp;
+        double coefficient = polynomialCoefficient(degree);
+        string temp = to_string(coefficient) + "*x^" + to_string(degree);
+        if (coefficient >= 0) QFHADP = QFHADP + "+" + temp;
+        else QFHADP = QFHADP + temp;
         degree--;
     }
-    return QFHADA;
+    return {QFHADP};
 }
 
-double CauchyBound(const ublas::vector<double> &vector) {
+double CauchyBound(const ublas::vector<double> &vectorUblas) {
     double max = 0;
-    for (int i = 0; i < vector.size(); ++i) {
-        if (max < abs(vector(i))) max = abs(vector(i));
+    for (int i = 0; i < vectorUblas.size(); ++i) {
+        if (max < fabs(vectorUblas(i))) max = fabs(vectorUblas(i));
     }
     return 1 + max;
 }
@@ -84,7 +86,7 @@ double secf(double beg, double end, Formula formula) {
     return beg - formula.Evaluate(beg) * (end - beg) / (formula.Evaluate(end) - formula.Evaluate(beg));
 }
 
-ublas::vector<double> FindPolynomialRoot(const ublas::vector<double> &polynomialCoefficient, Formula &QFHADA) {
+ublas::vector<double> FindPolynomialRoot(const ublas::vector<double> &polynomialCoefficient, Formula &QFHADP) {
     int rootNum = polynomialCoefficient.size();
     double foundRootBound = CauchyBound(polynomialCoefficient);
     int segmentNum = 1e5;
@@ -94,17 +96,33 @@ ublas::vector<double> FindPolynomialRoot(const ublas::vector<double> &polynomial
     std::vector<double> polynomialRootStd;
     ublas::vector<double> polynomialRootUblasVector(rootNum);
 
+//    while (x < foundRootBound) {
+//        double a = x, b = x + step;
+//        double c = secf(a, b, QFHADP);
+//        if (QFHADP.Evaluate(a) * QFHADP.Evaluate(b) <= 0) {
+//            while (abs(c - b) >= epsilon) {
+//                a = b;
+//                b = c;
+//                c = secf(a, c, QFHADP);
+//            }
+//            polynomialRootStd.push_back(c);
+//        }
+//        x += step;
+//    }
+
     while (x < foundRootBound) {
-        double a = x, b = x + step;
-        double c = secf(a, b, QFHADA);
-        if (QFHADA.Evaluate(a) * QFHADA.Evaluate(b) <= 0) {
-            while (abs(c - b) >= epsilon) {
-                a = b;
-                b = c;
-                c = secf(a, c, QFHADA);
+        double a = x, b = x + step, c;
+
+        if (QFHADP.Evaluate(a) * QFHADP.Evaluate(b) <= 0) {
+            while (b - a >= 2 * epsilon) {
+                c = (a + b) / 2;
+                if (QFHADP.Evaluate(b) * QFHADP.Evaluate(c) <= 0) {
+                    a = c;
+                } else b = c;
             }
-            polynomialRootStd.push_back(c);
+            polynomialRootStd.push_back((a+b)/2);
         }
+
         x += step;
     }
 
@@ -132,20 +150,49 @@ ublas::vector<double> FindInterpolationCoefficient(const ublas::vector<double> &
 
     InvertMatrix(matrixWandermond, matrixWandermond);
 
-    ublas::vector<double>interpolationCoefficient = prod(matrixWandermond, weightVectorFirstHalf);
+    ublas::vector<double> interpolationCoefficient = prod(matrixWandermond, weightVectorFirstHalf);
 
     return interpolationCoefficient;
 }
 
-double InterpolationQF(const ublas::vector<double> &interpolationCoefficient, const ublas::vector<double> &polynomialRootVector, Formula &QFHADA){
+double InterpolationQF(const ublas::vector<double> &interpolationCoefficient,
+                       const ublas::vector<double> &polynomialRootVector, Formula &formula) {
     int size = polynomialRootVector.size();
     ublas::vector<double> rootValueVector(size);
 
     for (int i = 0; i < size; ++i) {
-        rootValueVector(i) = QFHADA.Evaluate(polynomialRootVector(i));
+        rootValueVector(i) = formula.Evaluate(polynomialRootVector(i));
     }
 
-    return dot_product(interpolationCoefficient, rootValueVector);
+    double sum = 0;
+
+    for (int i = 0; i < size; ++i) {
+        sum += interpolationCoefficient(i) * rootValueVector(i);
+    }
+
+    return sum;
+}
+
+bool CheckPrecisionIQF(Integrator weightIntegrator, const Formula &QFHADP, const int degreeQFHADA) {
+    string checkPrecisionString("1");
+    for (int i = 1; i < degreeQFHADA; ++i) {
+        checkPrecisionString = checkPrecisionString + "+x^" + to_string(i);
+    }
+
+    weightIntegrator.ModifyFormula(
+            "(" + weightIntegrator.GetFormula().GetFormula() + ")*(" + QFHADP.GetFormula() + ")*(" +
+            checkPrecisionString + ")");
+
+    if (abs(weightIntegrator.JSimpson().value) < 1e-10)
+        return true;
+
+    return false;
+}
+
+void printVector(const ublas::vector<double> &vectorUblas) {
+    for (const auto &element: vectorUblas)
+        cout << element << " ";
+    cout << endl;
 }
 
 void Task5_1() {
@@ -168,18 +215,36 @@ void Task5_1() {
     wcout << L"N - число узлов: ";
     cin >> nodeNum;
 
+    Formula funcFormula = Formula("sin(x)");
     Formula weightFormula = Formula("[x - 0,5]");
     Integrator weightIntegrator = Integrator(weightFormula, startingPoint, endingPoint, segmentNum);
 
     ublas::vector<double> weightFuncMoment = weightFunctionMoment(weightIntegrator, nodeNum);
+    printVector(weightFuncMoment);
 
-    Formula funcFormula = Formula("sin(x)");
+    ublas::vector<double> polynomialCoefficient = FindPolynomialCoefficient(weightFuncMoment);
+    printVector(polynomialCoefficient);
+
+    Formula QFHADP = BuildQFHADP(polynomialCoefficient);
+    cout << endl << QFHADP.GetFormula() << endl << QFHADP.Evaluate(1) << endl << endl;
+
+    ublas::vector<double> polynomialRoot = FindPolynomialRoot(polynomialCoefficient, QFHADP);
+    printVector(polynomialRoot);
+
+    ublas::vector<double> interpolationCoefficient = FindInterpolationCoefficient(polynomialRoot, weightFuncMoment);
+    printVector(interpolationCoefficient);
+
+    double interpolationQF = InterpolationQF(interpolationCoefficient, polynomialRoot, funcFormula);
+    cout << endl << interpolationQF << endl;
+
+    cout << CheckPrecisionIQF(weightIntegrator, QFHADP, nodeNum);
 
     Formula resultFormula = weightFormula * funcFormula;
-    Integrator integratorResult(resultFormula, startingPoint, endingPoint, segmentNum);
 
+    Integrator integratorResult(resultFormula, startingPoint, endingPoint, segmentNum);
     Formula formulaCompare = Formula("sin(x)*sgn(x - 0,5) + ((1 - 2*x)*cos(x)*sgn(x - 0,5))/2");
     double valueCompare = formulaCompare.Evaluate(endingPoint) - formulaCompare.Evaluate(startingPoint);
+    cout << endl << valueCompare << endl;
 
 
 }

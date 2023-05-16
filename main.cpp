@@ -2,6 +2,7 @@
 #include"Task5.1.h"
 #include"Task5.2.h"
 #include"Task5.3.h"
+#include<time.h>
 
 namespace ublas = boost::numeric::ublas;
 
@@ -41,6 +42,9 @@ int main() {
 //
 //    testAll();
 
-    Task5_1();
+//    Task5_1();
+    clock_t timeStart = clock();
+    Task5_2();
+    wcout << L"Программа завершилась за " << (double)(clock() - timeStart)/CLOCKS_PER_SEC << L" (секунды)";
     return 0;
 }

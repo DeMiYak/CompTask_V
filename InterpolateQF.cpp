@@ -64,7 +64,8 @@ double InterpolateQF::CauchyBound(const ublas::vector<double> &vectorUblas) {
 void InterpolateQF::MakePolynomialRoot() {
     int rootNum = _polynomialCoefficient.size();
     double foundRootBound = CauchyBound(_polynomialCoefficient);
-    int segmentNum = 1e5;
+    int segmentNum = _segmentNum;
+    if(segmentNum%2 == 0) segmentNum += 1;
     double epsilon = 1e-12;
     double step = 2 * foundRootBound / segmentNum;
     double x = -foundRootBound;
@@ -74,10 +75,10 @@ void InterpolateQF::MakePolynomialRoot() {
     while (x < foundRootBound) {
         double a = x, b = x + step, c;
 
-        if (_QFHADP.Evaluate(a) * _QFHADP.Evaluate(b) <= 0) {
+        if (_QFHADP.Evaluate(a) * _QFHADP.Evaluate(b) < 0) {
             while (b - a >= 2 * epsilon) {
                 c = (a + b) / 2;
-                if (_QFHADP.Evaluate(b) * _QFHADP.Evaluate(c) <= 0) {
+                if (_QFHADP.Evaluate(b) * _QFHADP.Evaluate(c) < 0) {
                     a = c;
                 } else b = c;
             }
@@ -157,6 +158,15 @@ InterpolateQF::InterpolateQF(const Formula &weightFormula, const Formula &formul
     _formulaIntegrator = Integrator(formulaFormula);
 }
 
+InterpolateQF::InterpolateQF(const Formula &weightFormula, const Formula &formulaFormula, const int &nodeNum) {
+    _weightIntegrator = Integrator(weightFormula);
+    _formulaIntegrator = Integrator(formulaFormula);
+    _nodeNum = nodeNum;
+    _polynomialRoot = ublas::vector<double>(nodeNum, 0);
+    _interpolationCoefficient = ublas::vector<double>(nodeNum, 0);
+    _polynomialCoefficient = ublas::vector<double>(nodeNum, 0);
+}
+
 InterpolateQF::InterpolateQF(const string &weightString, const string &formulaString) {
     _weightIntegrator = Integrator(Formula(weightString));
     _formulaIntegrator = Integrator(Formula(formulaString));
@@ -176,6 +186,19 @@ InterpolateQF::InterpolateQF(const Formula &weightFormula, const Formula &formul
     MakeQFHADP();
     MakePolynomialRoot();
     MakeInterpolationCoefficient();
+}
+
+InterpolateQF::InterpolateQF(const Formula &weightFormula, const Formula &formulaFormula, const Formula &QFHADP, const int &segmentNum, const int &nodeNum){
+    _weightIntegrator = Integrator(weightFormula);
+    _formulaIntegrator = Integrator(formulaFormula);
+    _startingPoint = -1;
+    _endingPoint = 1;
+    RewriteSegmentNum(segmentNum);
+    RewriteNodeNum(nodeNum);
+
+    _polynomialCoefficient = ublas::vector<double>(nodeNum, 0);
+    _QFHADP = QFHADP;
+    MakePolynomialRoot();
 }
 
 void InterpolateQF::RewriteIntegratorParameters(const double &startingPoint, const double &endingPoint, const int &segmentNum){

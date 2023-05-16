@@ -188,6 +188,8 @@ namespace ublas = boost::numeric::ublas;
 
 double IQFPreciselResult(InterpolateQF &IQF) {
     Integrator resultIntegrator = Integrator(IQF.GetWeightIntegrator().GetFormula()*IQF.GetFormulaIntegrator().GetFormula(), IQF.GetFormulaIntegrator().GetStartingPoint(), IQF.GetFormulaIntegrator().GetEndingPoint(), IQF.GetFormulaIntegrator().GetSegmentNum());
+    if(resultIntegrator.JSimpson().value == INFINITY)
+        return resultIntegrator.JMiddleRectangle().value;
     return resultIntegrator.JSimpson().value;
 }
 
@@ -248,43 +250,6 @@ void Task5_1() {
 
     Integrator resultIntegrator = Integrator(weightFormula*funcFormula, startingPoint, endingPoint, segmentNum);
     double result = resultIntegrator.JSimpson().value;
-//    Integrator weightIntegrator = Integrator(weightFormula, startingPoint, endingPoint, segmentNum);
-//
-//    ublas::vector<double> weightFuncMoment = weightFunctionMoment(weightIntegrator, nodeNum);
-//    printVector(weightFuncMoment);
-//
-//    ublas::vector<double> polynomialCoefficient = FindPolynomialCoefficient(weightFuncMoment);
-//    printVector(polynomialCoefficient);
-//
-//    Formula QFHADP = BuildQFHADP(polynomialCoefficient);
-//    cout << endl << QFHADP.GetFormula() << endl << QFHADP.Evaluate(1) << endl << endl;
-//
-//    ublas::vector<double> polynomialRoot = FindPolynomialRoot(polynomialCoefficient, QFHADP);
-//    printVector(polynomialRoot);
-//
-//    ublas::vector<double> interpolationCoefficient = FindInterpolationCoefficient(polynomialRoot, weightFuncMoment);
-//    printVector(interpolationCoefficient);
-//
-//    double interpolationQF = InterpolationQF(interpolationCoefficient, polynomialRoot, funcFormula);
-//    cout << endl << interpolationQF << endl;
-//
-//    cout << CheckPrecisionIQF(weightIntegrator, polynomialRoot, interpolationCoefficient, nodeNum);
-//
-//    Formula resultFormula = weightFormula * funcFormula;
-//
-//    Integrator integratorResult(resultFormula, startingPoint, endingPoint, segmentNum);
-//
-//    double result = integratorResult.JSimpson().value;
-//    double absoluteError = abs(interpolationQF - result);
-//    double relativeError = absoluteError/abs(result)*100;
-//
-//    cout << endl;
-//    if(absoluteError < 1e-5){
-//        wcout << L"ИКФ хорошо приближает интеграл";
-//    } else wcout << L"ИКФ плохо приближает интеграл";
-//
-//    wcout << endl << L"ИКФ: " << interpolationQF << L"\nИнтеграл: " << result << L"\nАбсолютная погрешность: " << absoluteError;
-//    wcout << L"\nОтносительная погрешность: " << relativeError << "%" << endl;
 
     InterpolateQF IQF(weightFormula, funcFormula, startingPoint, endingPoint, segmentNum, nodeNum);
 

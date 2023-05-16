@@ -10,6 +10,11 @@
 #include"invert_matrix.cpp"
 
 class InterpolateQF {
+
+    friend void MakeGaussCoefficient(InterpolateQF &IQFGauss);
+    friend void StretchIntegratorSegment(InterpolateQF &IQFGauss, const double &startingPoint, const double &endingPoint);
+    friend void MakeMehlerValue(InterpolateQF &IQFMehler);
+
 public:
     InterpolateQF();
 
@@ -17,10 +22,14 @@ public:
 
     InterpolateQF(const Formula &weightFormula, const Formula &formulaFormula);
 
+    InterpolateQF(const Formula &weightFormula, const Formula &formulaFormula, const int &nodeNum);
+
     InterpolateQF(const string &weightString, const string &formulaString);
 
     InterpolateQF(const Formula &weightFormula, const Formula &formulaFormula, const double &startingPoint,
                   const double &endingPoint, const int &segmentNum, const int &nodeNum);
+
+    InterpolateQF(const Formula &weightFormula, const Formula &formulaFormula, const Formula &QFHADP, const int &segmentNum, const int &nodeNum);
 
     void RewriteIntegratorParameters(const double &startingPoint, const double &endingPoint, const int &segmentNum);
 
@@ -50,6 +59,14 @@ public:
 
     Integrator GetFormulaIntegrator(){return _formulaIntegrator;}
 
+    void ModifyFormulaIntegrator(const Integrator &formulaIntegrator) {
+        _formulaIntegrator = formulaIntegrator;
+        if (!(formulaIntegrator.GetSegmentNum() == _segmentNum &&
+              formulaIntegrator.GetStartingPoint() == _startingPoint &&
+              formulaIntegrator.GetEndingPoint() == _endingPoint))
+            _formulaIntegrator.SetValues(_startingPoint, _endingPoint, _segmentNum);
+    }
+
     int GetNodeNum(){return _nodeNum;}
 
 private:
@@ -68,13 +85,13 @@ private:
 
     int _nodeNum = 2;
 
-    ublas::vector<double> _weightFuncMoment;
+    ublas::vector<double> _weightFuncMoment = ublas::vector<double>(2*_nodeNum, 0);
 
-    ublas::vector<double> _polynomialCoefficient;
+    ublas::vector<double> _polynomialCoefficient = ublas::vector<double>(_nodeNum, 0);
 
-    ublas::vector<double> _polynomialRoot;
+    ublas::vector<double> _polynomialRoot = ublas::vector<double>(_nodeNum, 0);
 
-    ublas::vector<double> _interpolationCoefficient;
+    ublas::vector<double> _interpolationCoefficient = ublas::vector<double>(_nodeNum, 0);
 
     bool GoodInsert(const double &startingPoint, const double &endingPoint, const int &segmentNum, const int &nodeNum) {
         if ((segmentNum > 0) && (nodeNum > 1) && (startingPoint <= endingPoint))

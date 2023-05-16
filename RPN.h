@@ -65,13 +65,25 @@ public:
         return Formula(formulaOne + "-(" + formulaTwo._formula + ")");
     }
 
+    Formula operator/(const Formula &formulaTwo){
+        return *this/formulaTwo._formula;
+    }
+
+    Formula operator/(const string &formulaTwo){
+        return Formula("(" + _formula + ")/(" + formulaTwo + ")");
+    }
+
+    friend Formula operator/(const string &formulaOne, const Formula &formulaTwo){
+        return Formula("(" + formulaOne + ")/(" + formulaTwo._formula + ")");
+    }
+
     string GetFormula() const{ return _formula; }
 
 private:
 
     string _formula;
 
-    const string _operator = "~+*^- sin cos ln tan asin acos atan sgn";
+    const string _operator = "~+*^-/ sin cos ln tan asin acos atan sgn";
 
     bool delimiter(char c);
 

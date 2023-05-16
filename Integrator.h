@@ -51,7 +51,7 @@ public:
 
     void ModifyFormulaMultiply(const string &insertString){_formula = _formula*insertString;}
 
-    void ModifyFormula(const string &insertString){_formula = insertString;}
+    void ModifyFormula(const string &insertString){_formula = Formula(insertString);}
 
     Formula GetFormula() const{return _formula;}
 

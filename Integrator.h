@@ -45,6 +45,8 @@ public:
 
     int GetSegmentNum() const { return _segmentNum; }
 
+    void RewriteSegmentNum(const int &segmentNum = -1){if(segmentNum > 0) _segmentNum = segmentNum;}
+
     void ModifySegmentNum(int modifier = -1) {if(modifier > 0) _segmentNum *= modifier;}
 
     void ModifyFormulaMultiply(const string &insertString){_formula = _formula*insertString;}

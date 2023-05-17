@@ -42,9 +42,11 @@ int main() {
 //
 //    testAll();
 
-//    Task5_1();
+
     clock_t timeStart = clock();
-    Task5_2();
+//    Task5_1();
+//    Task5_2();
+    Task5_3();
     wcout << L"Программа завершилась за " << (double)(clock() - timeStart)/CLOCKS_PER_SEC << L" (секунды)";
     return 0;
 }

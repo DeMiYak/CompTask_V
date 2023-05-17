@@ -11,9 +11,12 @@
 
 class InterpolateQF {
 
-    friend void MakeGaussCoefficient(InterpolateQF &IQFGauss);
-    friend void StretchIntegratorSegment(InterpolateQF &IQFGauss, const double &startingPoint, const double &endingPoint);
+    friend void
+    StretchIntegratorSegment(InterpolateQF &IQFGauss, const double &startingPoint, const double &endingPoint);
+
     friend void MakeMehlerValue(InterpolateQF &IQFMehler);
+
+    friend double StretchedGaussValue(InterpolateQF IQFGauss, const double &startingPoint, const double &endingPoint);
 
 public:
     InterpolateQF();
@@ -29,14 +32,23 @@ public:
     InterpolateQF(const Formula &weightFormula, const Formula &formulaFormula, const double &startingPoint,
                   const double &endingPoint, const int &segmentNum, const int &nodeNum);
 
-    InterpolateQF(const Formula &weightFormula, const Formula &formulaFormula, const Formula &QFHADP, const int &segmentNum, const int &nodeNum);
+    InterpolateQF(const Formula &weightFormula, const Formula &formulaFormula, const Formula &QFHADP,
+                  const int &segmentNum, const int &nodeNum);
+
+    void MakeGaussCoefficient();
 
     void RewriteIntegratorParameters(const double &startingPoint, const double &endingPoint, const int &segmentNum);
 
-    void RewriteNodeNum(const int &nodeNum){_nodeNum = nodeNum;}
+    void RewriteNodeNum(const int &nodeNum) {
+        _nodeNum = nodeNum;
+        _weightFuncMoment.resize(2 * _nodeNum);
+        _polynomialCoefficient.resize(_nodeNum);
+        _polynomialRoot.resize(_nodeNum);
+        _interpolationCoefficient.resize(_nodeNum);
+    }
 
-    void RewriteSegmentNum(const int &segmentNum = -1){
-        if(segmentNum > 0){
+    void RewriteSegmentNum(const int &segmentNum) {
+        if (segmentNum > 0) {
             _segmentNum = segmentNum;
             _weightIntegrator.RewriteSegmentNum(_segmentNum);
             _formulaIntegrator.RewriteSegmentNum(_segmentNum);
@@ -47,17 +59,17 @@ public:
 
     void PrintData();
 
-    ublas::vector<double> GetWeightFuncMoment(){return _weightFuncMoment;}
+    ublas::vector<double> GetWeightFuncMoment() { return _weightFuncMoment; }
 
-    ublas::vector<double> GetPolynomialCoefficient(){return _polynomialCoefficient;}
+    ublas::vector<double> GetPolynomialCoefficient() { return _polynomialCoefficient; }
 
-    ublas::vector<double> GetPolynomialRoot(){return _polynomialRoot;}
+    ublas::vector<double> GetPolynomialRoot() { return _polynomialRoot; }
 
-    ublas::vector<double> GetInterpolationCoefficient(){return _interpolationCoefficient;}
+    ublas::vector<double> GetInterpolationCoefficient() { return _interpolationCoefficient; }
 
-    Integrator GetWeightIntegrator(){return _weightIntegrator;}
+    Integrator GetWeightIntegrator() { return _weightIntegrator; }
 
-    Integrator GetFormulaIntegrator(){return _formulaIntegrator;}
+    Integrator GetFormulaIntegrator() { return _formulaIntegrator; }
 
     void ModifyFormulaIntegrator(const Integrator &formulaIntegrator) {
         _formulaIntegrator = formulaIntegrator;
@@ -67,7 +79,7 @@ public:
             _formulaIntegrator.SetValues(_startingPoint, _endingPoint, _segmentNum);
     }
 
-    int GetNodeNum(){return _nodeNum;}
+    int GetNodeNum() { return _nodeNum; }
 
 private:
 
@@ -85,7 +97,7 @@ private:
 
     int _nodeNum = 2;
 
-    ublas::vector<double> _weightFuncMoment = ublas::vector<double>(2*_nodeNum, 0);
+    ublas::vector<double> _weightFuncMoment = ublas::vector<double>(2 * _nodeNum, 0);
 
     ublas::vector<double> _polynomialCoefficient = ublas::vector<double>(_nodeNum, 0);
 

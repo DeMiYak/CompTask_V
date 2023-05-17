@@ -12,7 +12,7 @@
 
 void Task5_1();
 
-double IQFPreciselResult(InterpolateQF &IQF);
+double IQFPreciseResult(InterpolateQF &IQF);
 
 bool CheckPrecisionIQF(InterpolateQF &IQF);
 

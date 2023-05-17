@@ -6,6 +6,19 @@
 
 namespace ublas = boost::numeric::ublas;
 
+void InterpolateQF::MakeGaussCoefficient() {
+    int size = _nodeNum;
+    ublas::vector<double> interpolationCoefficient(size);
+    Integrator QFHADPIntegrator(_QFHADP, -1, 1, _segmentNum);
+
+    for (int i = 0; i < size; ++i) {
+        double rootValue = _polynomialRoot(i);
+        interpolationCoefficient(i) =
+                2 / ((1 - pow(rootValue, 2)) * pow(QFHADPIntegrator.FirstDerivative(rootValue), 2));
+    }
+    _interpolationCoefficient = interpolationCoefficient;
+}
+
 void InterpolateQF::MakeWeightMoment(Integrator weightIntegrator) {
     int nodeACT = 2 * _nodeNum;
     ublas::vector<double> vectorMoment(nodeACT);
@@ -118,7 +131,7 @@ void InterpolateQF::MakeInterpolationCoefficient() {
 
 double InterpolateQF::IQFValue() {
     int size = _polynomialRoot.size();
-    ublas::vector<double> rootValueVector(size);
+    ublas::vector<double> rootValueVector(size, 0);
 
     for (int i = 0; i < size; ++i) {
         rootValueVector(i) = _formulaIntegrator.GetFormula().Evaluate(_polynomialRoot(i));
@@ -199,6 +212,7 @@ InterpolateQF::InterpolateQF(const Formula &weightFormula, const Formula &formul
     _polynomialCoefficient = ublas::vector<double>(nodeNum, 0);
     _QFHADP = QFHADP;
     MakePolynomialRoot();
+    MakeGaussCoefficient();
 }
 
 void InterpolateQF::RewriteIntegratorParameters(const double &startingPoint, const double &endingPoint, const int &segmentNum){

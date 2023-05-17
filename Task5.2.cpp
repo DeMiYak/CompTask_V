@@ -2,16 +2,18 @@
 // Created by Пользователь on 08.05.2023.
 //
 #include"Task5.1.h"
+#include "InterpolateQF.h"
 
-Formula BuildLegendrePolynomial(const int &nodeNum = 0){
-    if(nodeNum <= 0) return {"1"};
-    if(nodeNum == 1) return {"x"};
-    else{
+
+Formula BuildLegendrePolynomial(const int &nodeNum = 0) {
+    if (nodeNum <= 0) return {"1"};
+    if (nodeNum == 1) return {"x"};
+    else {
         Formula p0("1");
         Formula p1("x");
         Formula p2;
-        for (int i = 2; i <= nodeNum ; ++i) {
-            p2 = to_string(double(2*i - 1)/i)*p1*"x"-to_string(double(i-1)/i)*p0;
+        for (int i = 2; i <= nodeNum; ++i) {
+            p2 = to_string(double(2 * i - 1) / i) * p1 * "x" - to_string(double(i - 1) / i) * p0;
             p0 = p1;
             p1 = p2;
         }
@@ -21,41 +23,29 @@ Formula BuildLegendrePolynomial(const int &nodeNum = 0){
 
 }
 
-void MakeGaussCoefficient(InterpolateQF &IQFGauss){
-    int size = IQFGauss._nodeNum;
-    ublas::vector<double> interpolationCoefficient(size);
-    Integrator QFHADPIntegrator(IQFGauss._QFHADP, -1, 1, IQFGauss._segmentNum);
-
-    for (int i = 0; i < size; ++i) {
-        double rootValue = IQFGauss._polynomialRoot(i);
-        interpolationCoefficient(i) = 2/((1 - pow(rootValue, 2))*pow(QFHADPIntegrator.FirstDerivative(rootValue), 2));
-    }
-    IQFGauss._interpolationCoefficient = interpolationCoefficient;
-}
-
-void MakeMehlerValue(InterpolateQF &IQFMehler){
+void MakeMehlerValue(InterpolateQF &IQFMehler) {
     int nodeNum = IQFMehler._nodeNum;
     const double pi = acos(-1);
-    const double interpolationCoefficientConst = pi/nodeNum;
+    const double interpolationCoefficientConst = pi / nodeNum;
     for (int i = 0; i < nodeNum; ++i) {
         IQFMehler._interpolationCoefficient(i) = interpolationCoefficientConst;
-        IQFMehler._polynomialRoot(i) = cos(double(2*i+1)/(2*nodeNum)*pi);
+        IQFMehler._polynomialRoot(i) = cos(double(2 * i + 1) / (2 * nodeNum) * pi);
     }
 }
 
-void StretchIntegratorSegment(InterpolateQF &IQFGauss, const double &startingPoint, const double &endingPoint){
-    if(IQFGauss._startingPoint != startingPoint || IQFGauss._endingPoint != endingPoint){
+void StretchIntegratorSegment(InterpolateQF &IQFGauss, const double &startingPoint, const double &endingPoint) {
+    if (IQFGauss._startingPoint != startingPoint || IQFGauss._endingPoint != endingPoint) {
         int size = IQFGauss._nodeNum;
         IQFGauss._startingPoint = startingPoint;
         IQFGauss._endingPoint = endingPoint;
 
         IQFGauss.RewriteIntegratorParameters(startingPoint, endingPoint, IQFGauss._segmentNum);
 
-        double coefOne = (IQFGauss._endingPoint - IQFGauss._startingPoint)/2;
+        double coefOne = (IQFGauss._endingPoint - IQFGauss._startingPoint) / 2;
         double coefTwo = coefOne + IQFGauss._startingPoint;
 
         for (int i = 0; i < size; ++i) {
-            IQFGauss._polynomialRoot(i) = coefOne*IQFGauss._polynomialRoot(i) + coefTwo;
+            IQFGauss._polynomialRoot(i) = coefOne * IQFGauss._polynomialRoot(i) + coefTwo;
             IQFGauss._interpolationCoefficient(i) *= coefOne;
         }
     }
@@ -85,9 +75,7 @@ void Task5_2() {
     Formula MehlerFormula = Formula("e^(2*x)*x^2");
     Formula WeightFormula = Formula("1");
 
-    Formula MehlerFormulaNew = MehlerFormula/"(1 - x^2)^(1/2)";
-
-    cout << MehlerFormulaNew.GetFormula();
+    Formula MehlerFormulaNew = MehlerFormula / "(1 - x^2)^(1/2)";
 
     wcout << endl << L"КФ Гаусса" << endl;
 
@@ -95,11 +83,9 @@ void Task5_2() {
 
     InterpolateQF IQFGauss(WeightFormula, GaussFormula, LegendrePolynomial, segmentNum, nodeNum);
 
-    MakeGaussCoefficient(IQFGauss);
-
     StretchIntegratorSegment(IQFGauss, startingPoint, endingPoint);
 
-    double resultGauss = IQFPreciselResult(IQFGauss);
+    double resultGauss = IQFPreciseResult(IQFGauss);
     double GaussValue = IQFGauss.IQFValue();
 
     IQFGauss.PrintData();
@@ -120,7 +106,7 @@ void Task5_2() {
 
     IQFMehler.ModifyFormulaIntegrator(MehlerIntegrator);
 
-    double resultMehler = IQFPreciselResult(IQFMehler);
+    double resultMehler = IQFPreciseResult(IQFMehler);
 
     IQFMehler.PrintData();
 

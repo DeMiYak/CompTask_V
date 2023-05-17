@@ -10,14 +10,6 @@
 #include"invert_matrix.cpp"
 
 class InterpolateQF {
-
-    friend void
-    StretchIntegratorSegment(InterpolateQF &IQFGauss, const double &startingPoint, const double &endingPoint);
-
-    friend void MakeMehlerValue(InterpolateQF &IQFMehler);
-
-    friend double StretchedGaussValue(InterpolateQF IQFGauss, const double &startingPoint, const double &endingPoint);
-
 public:
     InterpolateQF();
 
@@ -36,6 +28,14 @@ public:
                   const int &segmentNum, const int &nodeNum);
 
     void MakeGaussCoefficient();
+
+    void StretchIntegratorSegment(const double &startingPoint, const double &endingPoint);
+
+    void MakeMehlerValue();
+
+    double CQFGauss(const double &startingPoint, const double &endingPoint,
+                    const int &CQFsegmentNum);
+
 
     void RewriteIntegratorParameters(const double &startingPoint, const double &endingPoint, const int &segmentNum);
 
@@ -122,6 +122,8 @@ private:
     double CauchyBound(const ublas::vector<double> &vectorUblas);
 
     void MakeInterpolationCoefficient();
+
+    double StretchedGaussValue(InterpolateQF IQFGauss, const double &startingPoint, const double &endingPoint);
 };
 
 #endif //COMPTASK_V_ROOTFINDER_H

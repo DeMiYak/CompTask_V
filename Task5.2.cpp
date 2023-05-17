@@ -23,34 +23,6 @@ Formula BuildLegendrePolynomial(const int &nodeNum = 0) {
 
 }
 
-void MakeMehlerValue(InterpolateQF &IQFMehler) {
-    int nodeNum = IQFMehler._nodeNum;
-    const double pi = acos(-1);
-    const double interpolationCoefficientConst = pi / nodeNum;
-    for (int i = 0; i < nodeNum; ++i) {
-        IQFMehler._interpolationCoefficient(i) = interpolationCoefficientConst;
-        IQFMehler._polynomialRoot(i) = cos(double(2 * i + 1) / (2 * nodeNum) * pi);
-    }
-}
-
-void StretchIntegratorSegment(InterpolateQF &IQFGauss, const double &startingPoint, const double &endingPoint) {
-    if (IQFGauss._startingPoint != startingPoint || IQFGauss._endingPoint != endingPoint) {
-        int size = IQFGauss._nodeNum;
-        IQFGauss._startingPoint = startingPoint;
-        IQFGauss._endingPoint = endingPoint;
-
-        IQFGauss.RewriteIntegratorParameters(startingPoint, endingPoint, IQFGauss._segmentNum);
-
-        double coefOne = (IQFGauss._endingPoint - IQFGauss._startingPoint) / 2;
-        double coefTwo = coefOne + IQFGauss._startingPoint;
-
-        for (int i = 0; i < size; ++i) {
-            IQFGauss._polynomialRoot(i) = coefOne * IQFGauss._polynomialRoot(i) + coefTwo;
-            IQFGauss._interpolationCoefficient(i) *= coefOne;
-        }
-    }
-}
-
 void Task5_2() {
     wcout << L"Задание 5.2." << endl
           << L"КФ Гаусса, Мелера, их узлы и коэффициценты\nВычисление интегралов с их помощью" << endl;
@@ -83,7 +55,7 @@ void Task5_2() {
 
     InterpolateQF IQFGauss(WeightFormula, GaussFormula, LegendrePolynomial, segmentNum, nodeNum);
 
-    StretchIntegratorSegment(IQFGauss, startingPoint, endingPoint);
+    IQFGauss.StretchIntegratorSegment(startingPoint, endingPoint);
 
     double resultGauss = IQFPreciseResult(IQFGauss);
     double GaussValue = IQFGauss.IQFValue();
@@ -98,7 +70,7 @@ void Task5_2() {
     InterpolateQF IQFMehler(WeightFormula, MehlerFormula, nodeNum);
     IQFMehler.RewriteIntegratorParameters(-1, 1, segmentNum);
 
-    MakeMehlerValue(IQFMehler);
+    IQFMehler.MakeMehlerValue();
 
     double IQFMehlerValue = IQFMehler.IQFValue();
 

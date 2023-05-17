@@ -6,6 +6,66 @@
 
 namespace ublas = boost::numeric::ublas;
 
+double InterpolateQF::StretchedGaussValue(InterpolateQF IQFGauss, const double &startingPoint, const double &endingPoint) {
+    if (IQFGauss._startingPoint != startingPoint || IQFGauss._endingPoint != endingPoint) {
+        int size = IQFGauss._nodeNum;
+        IQFGauss._startingPoint = startingPoint;
+        IQFGauss._endingPoint = endingPoint;
+
+        IQFGauss.RewriteIntegratorParameters(startingPoint, endingPoint, IQFGauss._segmentNum);
+
+        double coefOne = (IQFGauss._endingPoint - IQFGauss._startingPoint) / 2;
+        double coefTwo = coefOne + IQFGauss._startingPoint;
+
+        for (int i = 0; i < size; ++i) {
+            IQFGauss._polynomialRoot(i) = coefOne * IQFGauss._polynomialRoot(i) + coefTwo;
+            IQFGauss._interpolationCoefficient(i) *= coefOne;
+        }
+    }
+    return IQFGauss.IQFValue();
+}
+
+double InterpolateQF::CQFGauss(const double &startingPoint, const double &endingPoint,
+                               const int &CQFsegmentNum) {
+    double step = (endingPoint - startingPoint) / CQFsegmentNum;
+    double x = startingPoint;
+    double CQFsum = 0;
+    while (x < endingPoint) {
+        CQFsum += StretchedGaussValue(*this, x, x + step);
+        x += step;
+    }
+    return CQFsum;
+}
+
+void InterpolateQF::MakeMehlerValue() {
+    int nodeNum = _nodeNum;
+    const double pi = acos(-1);
+    const double interpolationCoefficientConst = pi / nodeNum;
+    for (int i = 0; i < nodeNum; ++i) {
+        _interpolationCoefficient(i) = interpolationCoefficientConst;
+        _polynomialRoot(i) = cos(double(2 * i + 1) / (2 * nodeNum) * pi);
+    }
+}
+
+void InterpolateQF::StretchIntegratorSegment(const double &startingPoint, const double &endingPoint) {
+    if (_startingPoint != startingPoint || _endingPoint != endingPoint) {
+        int size = _nodeNum;
+        _startingPoint = startingPoint;
+        _endingPoint = endingPoint;
+
+        RewriteIntegratorParameters(startingPoint, endingPoint, _segmentNum);
+
+        double coefOne = (_endingPoint - _startingPoint) / 2;
+        double coefTwo = coefOne + _startingPoint;
+
+        for (int i = 0; i < size; ++i) {
+            _polynomialRoot(i) = coefOne * _polynomialRoot(i) + coefTwo;
+            _interpolationCoefficient(i) *= coefOne;
+        }
+    }
+}
+
+
 void InterpolateQF::MakeGaussCoefficient() {
     int size = _nodeNum;
     ublas::vector<double> interpolationCoefficient(size);

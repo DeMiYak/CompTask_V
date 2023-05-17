@@ -46,7 +46,7 @@ int main() {
     clock_t timeStart = clock();
 //    Task5_1();
 //    Task5_2();
-    Task5_3();
+//    Task5_3();
     wcout << L"Программа завершилась за " << (double)(clock() - timeStart)/CLOCKS_PER_SEC << L" (секунды)";
     return 0;
 }
